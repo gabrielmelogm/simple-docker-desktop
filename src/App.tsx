@@ -1,4 +1,4 @@
-import DockerContainers from "./components/DockerContainers";
+import { DockerContainers } from "./screens/DockerContainers";
 import "./App.css";
 
 function App() {

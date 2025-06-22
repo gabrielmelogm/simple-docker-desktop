@@ -9,7 +9,7 @@ fn greet(name: &str) -> String {
 #[tauri::command]
 fn get_docker_containers() -> Result<String, String> {
     let output = Command::new("docker")
-        .args(&["ps", "--format", "{{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"])
+        .args(&["ps", "-a", "--format", "{{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"])
         .output()
         .map_err(|e| format!("Failed to execute docker ps: {}", e))?;
 

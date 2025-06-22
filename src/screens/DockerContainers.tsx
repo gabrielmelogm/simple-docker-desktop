@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface DockerContainer {
   id: string;
@@ -9,7 +12,7 @@ interface DockerContainer {
   names: string;
 }
 
-export default function DockerContainers() {
+export function DockerContainers() {
   const [containers, setContainers] = useState<DockerContainer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,12 +54,19 @@ export default function DockerContainers() {
 
   useEffect(() => {
     fetchContainers();
+
+    const interval = setInterval(() => {
+      fetchContainers();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const getStatusColor = (status: string) => {
-    if (status.includes("Up")) return "text-green-600 bg-green-100";
-    if (status.includes("Exited")) return "text-red-600 bg-red-100";
-    return "text-yellow-600 bg-yellow-100";
+  const getStatusColor = (status: string): "up" | "exited" => {
+    if (status.includes("Up")) return "up";
+    if (status.includes("Exited")) return "exited";
+
+    return 'exited'
   };
 
   return (
@@ -67,10 +77,9 @@ export default function DockerContainers() {
             <h2 className="text-2xl font-bold text-gray-900">
               Docker Containers
             </h2>
-            <button
+            <Button
               onClick={fetchContainers}
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <div className="flex items-center">
@@ -80,7 +89,7 @@ export default function DockerContainers() {
               ) : (
                 "Refresh"
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -147,8 +156,14 @@ export default function DockerContainers() {
                         {container.image}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(container.status)}`}>
-                          {container.status}
+                        <span className={'inline-flex px-2 py-1 text-xs font-semibold rounded-full'}>
+                          <Badge variant="secondary" className="gap-1.5">
+                            <span className={cn("size-1.5 rounded-full", {
+                              'bg-emerald-500': getStatusColor(container.status) === 'up',
+                              'bg-red-500': getStatusColor(container.status) === 'exited',
+                            })}></span>
+                            {container.status}
+                          </Badge>
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
