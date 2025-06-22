@@ -20,7 +20,7 @@ export function DockerContainers() {
   const [containers, setContainers] = useState<DockerContainer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [intervalInSeconds, setIntervalInSeconds] = useState<number>(1);
+  const [intervalInSeconds, setIntervalInSeconds] = useState<number>(5);
 
   const parseDockerOutput = (output: string): DockerContainer[] => {
     const lines = output.trim().split('\n');
@@ -95,7 +95,7 @@ export function DockerContainers() {
                 disabled={loading}
                 asChild
               >
-                <div className="flex items-center cursor-pointer transition-all duration-300 bg-zinc-800">
+                <div className="flex items-center cursor-pointer transition-all duration-300">
                   {loading ? (
                       <Loader2 className="size-4 animate-spin mr-2" />
                     ) : (
@@ -105,13 +105,12 @@ export function DockerContainers() {
               </Button>
               <Select
                 onValueChange={(value) => setIntervalInSeconds(Number(value))}
+                defaultValue={String(intervalInSeconds)}
               >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Refresh interval" defaultValue={String(intervalInSeconds)} />
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Refresh interval" />
                 </SelectTrigger>
-                <SelectContent
-                  defaultValue={String(intervalInSeconds)}
-                >
+                <SelectContent>
                   <SelectItem value="1">1 sec</SelectItem>
                   <SelectItem value="5">5 sec</SelectItem>
                   <SelectItem value="10">10 sec</SelectItem>
