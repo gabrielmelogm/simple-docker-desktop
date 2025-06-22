@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Loader2, Pause, RefreshCcw } from "lucide-react";
+import { AlertCircle, Loader2, Pause, RefreshCcw, Trash } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -80,6 +80,15 @@ export function DockerContainers() {
       await fetchContainers();
     } catch (error) {
       console.error("Error stopping container:", error);
+    }
+  }
+
+  async function removeContainer(id: string) {
+    try {
+      await invoke("remove_docker_container", { id });
+      await fetchContainers();
+    } catch (error) {
+      console.error("Error removing container:", error);
     }
   }
 
@@ -201,7 +210,7 @@ export function DockerContainers() {
                       <TableCell>
                         {container.names}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="flex items-center gap-2">
                         <Button
                           onClick={() => getStatusColor(container.status) === 'exited' ? null : stopContainer(container.id)}
                           asChild
@@ -211,7 +220,17 @@ export function DockerContainers() {
                             'opacity-40 cursor-not-allowed': getStatusColor(container.status) === 'exited',
                           })}
                           >
-                            <Pause className="size-4 text-red-500" />
+                            <Pause className="size-4 text-yellow-600" />
+                          </div>
+                        </Button>
+                        <Button
+                          onClick={() => removeContainer(container.id)}
+                          asChild
+                        >
+                          <div
+                           className={cn("flex items-center cursor-pointer transition-all duration-300 hover:bg-accent-foreground")}
+                          >
+                            <Trash className="size-4 text-red-600" />
                           </div>
                         </Button>
                       </TableCell>
