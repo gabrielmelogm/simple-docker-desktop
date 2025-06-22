@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Pause } from "lucide-react";
+import { AlertCircle, Loader2, Pause, RefreshCcw } from "lucide-react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DockerContainer {
   id: string;
@@ -81,29 +82,26 @@ export function DockerContainers() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="rounded-lg shadow-lg">
-        <div className="px-6 py-4">
+    <div className="max-w-7xl mx-auto pt-8">
+      <Card className="rounded-lg shadow-lg">
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">
-              Docker Containers
-            </h2>
+            <CardTitle>Docker Containers</CardTitle>
             <Button
               onClick={fetchContainers}
               disabled={loading}
+              asChild
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 mr-2"></div>
-                  Loading...
+              <div className="flex items-center cursor-pointer transition-all duration-300 bg-zinc-800">
+                {loading ? (
+                    <Loader2 className="size-4 animate-spin mr-2" />
+                  ) : (
+                    <RefreshCcw className="size-4" />
+                  )}
                 </div>
-              ) : (
-                "Refresh"
-              )}
             </Button>
           </div>
-        </div>
-
+        </CardHeader>
         <div className="p-6">
           {error && (
             <div className="mb-4 p-4 rounded-md">
@@ -186,10 +184,16 @@ export function DockerContainers() {
                       </TableCell>
                       <TableCell>
                         <Button
-                          onClick={() => stopContainer(container.id)}
-                          variant="destructive" disabled={getStatusColor(container.status) === 'exited'}
+                          onClick={() => getStatusColor(container.status) === 'exited' ? null : stopContainer(container.id)}
+                          asChild
                         >
-                          <Pause className="text-red-800" />
+                          <div
+                           className={cn("flex items-center cursor-pointer transition-all duration-300 hover:bg-accent-foreground", {
+                            'opacity-40 cursor-not-allowed': getStatusColor(container.status) === 'exited',
+                          })}
+                          >
+                            <Pause className="size-4 text-red-500" />
+                          </div>
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -202,7 +206,7 @@ export function DockerContainers() {
             </div>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 } 
