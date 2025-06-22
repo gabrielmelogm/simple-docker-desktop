@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertCircle, Loader2, Pause, RefreshCcw } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DockerContainer {
   id: string;
@@ -19,6 +20,7 @@ export function DockerContainers() {
   const [containers, setContainers] = useState<DockerContainer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [intervalInSeconds, setIntervalInSeconds] = useState<number>(1);
 
   const parseDockerOutput = (output: string): DockerContainer[] => {
     const lines = output.trim().split('\n');
@@ -60,10 +62,10 @@ export function DockerContainers() {
 
     const interval = setInterval(() => {
       fetchContainers();
-    }, 10000);
+    }, intervalInSeconds * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [intervalInSeconds]);
 
   const getStatusColor = (status: string): "up" | "exited" => {
     if (status.includes("Up")) return "up";
@@ -87,19 +89,37 @@ export function DockerContainers() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Docker Containers</CardTitle>
-            <Button
-              onClick={fetchContainers}
-              disabled={loading}
-              asChild
-            >
-              <div className="flex items-center cursor-pointer transition-all duration-300 bg-zinc-800">
-                {loading ? (
-                    <Loader2 className="size-4 animate-spin mr-2" />
-                  ) : (
-                    <RefreshCcw className="size-4" />
-                  )}
-                </div>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={fetchContainers}
+                disabled={loading}
+                asChild
+              >
+                <div className="flex items-center cursor-pointer transition-all duration-300 bg-zinc-800">
+                  {loading ? (
+                      <Loader2 className="size-4 animate-spin mr-2" />
+                    ) : (
+                      <RefreshCcw className="size-4" />
+                    )}
+                  </div>
+              </Button>
+              <Select
+                onValueChange={(value) => setIntervalInSeconds(Number(value))}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Refresh interval" defaultValue={String(intervalInSeconds)} />
+                </SelectTrigger>
+                <SelectContent
+                  defaultValue={String(intervalInSeconds)}
+                >
+                  <SelectItem value="1">1 sec</SelectItem>
+                  <SelectItem value="5">5 sec</SelectItem>
+                  <SelectItem value="10">10 sec</SelectItem>
+                  <SelectItem value="30">30 sec</SelectItem>
+                  <SelectItem value="60">60 sec</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <div className="p-6">
