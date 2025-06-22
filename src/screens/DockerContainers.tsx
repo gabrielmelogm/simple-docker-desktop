@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Loader2, Pause, RefreshCcw, Trash } from "lucide-react";
+import { AlertCircle, ExternalLink, Link, Loader2, Pause, RefreshCcw, Trash } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -22,6 +22,10 @@ export function DockerContainers() {
   const [error, setError] = useState<string | null>(null);
   const [intervalInSeconds, setIntervalInSeconds] = useState<number>(5);
 
+  function processPorts(ports: string): string {
+    return ports.split('->')[0].trim();
+  }
+
   const parseDockerOutput = (output: string): DockerContainer[] => {
     const lines = output.trim().split('\n');
     if (lines.length === 0) return [];
@@ -34,7 +38,7 @@ export function DockerContainers() {
           id: parts[0].trim(),
           image: parts[1].trim(),
           status: parts[2].trim(),
-          ports: parts[3].trim(),
+          ports: processPorts(parts[3].trim()),
           names: parts[4].trim()
         };
       }
@@ -205,7 +209,17 @@ export function DockerContainers() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {container.ports || "-"}
+                        {container.ports ? 
+                          <a
+                            href={`http://localhost:${container.ports.split(':')[1]}`}
+                            target="_blank"
+                            className="flex items-center justify-center gap-2 text-blue-500 cursor-pointer"
+                          >
+                            {container.ports}
+                            <ExternalLink className="size-4 mb-2" />
+                          </a> 
+                        : 
+                        "-"}
                       </TableCell>
                       <TableCell>
                         {container.names}
