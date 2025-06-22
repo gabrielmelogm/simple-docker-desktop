@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pause } from "lucide-react";
 
 interface DockerContainer {
   id: string;
@@ -69,6 +71,15 @@ export function DockerContainers() {
     return 'exited'
   };
 
+  async function stopContainer(id: string) {
+    try {
+      await invoke("stop_docker_container", { id });
+      await fetchContainers();
+    } catch (error) {
+      console.error("Error stopping container:", error);
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg">
@@ -126,36 +137,39 @@ export function DockerContainers() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
                       Container ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    </TableHead>
+                    <TableHead>
                       Image
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    </TableHead>
+                    <TableHead>
                       Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    </TableHead>
+                    <TableHead>
                       Ports
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    </TableHead>
+                    <TableHead>
                       Names
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                    </TableHead>
+                    <TableHead>
+                      
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {containers.map((container, index) => (
-                    <tr key={container.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                    <TableRow key={container.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <TableCell>
                         {container.id.substring(0, 12)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      </TableCell>
+                      <TableCell>
                         {container.image}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </TableCell>
+                      <TableCell>
                         <span className={'inline-flex px-2 py-1 text-xs font-semibold rounded-full'}>
                           <Badge variant="secondary" className="gap-1.5">
                             <span className={cn("size-1.5 rounded-full", {
@@ -165,17 +179,28 @@ export function DockerContainers() {
                             {container.status}
                           </Badge>
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      </TableCell>
+                      <TableCell>
                         {container.ports || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      </TableCell>
+                      <TableCell>
                         {container.names}
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          onClick={() => stopContainer(container.id)}
+                          variant="destructive" disabled={getStatusColor(container.status) === 'exited'}
+                        >
+                          <Pause className="text-red-800" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
+              <div className="w-full">
+                <span className="block pt-2 text-sm">{containers.length} containers found</span>
+              </div>
             </div>
           )}
         </div>

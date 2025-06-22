@@ -24,11 +24,27 @@ fn get_docker_containers() -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+fn stop_docker_container(id: &str) -> Result<String, String> {
+    let output = Command::new("docker")
+        .args(&["stop", id])
+        .output()
+        .map_err(|e| format!("Failed to execute docker stop: {}", e))?;
+
+    if output.status.success() {
+        Ok(String::from("Container stopped"))
+    } else {
+        let stderr = String::from_utf8(output.stderr)
+            .map_err(|e| format!("Failed to parse error: {}", e))?;
+        Err(format!("Docker command failed: {}", stderr))
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, get_docker_containers])
+        .invoke_handler(tauri::generate_handler![greet, get_docker_containers, stop_docker_container])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
