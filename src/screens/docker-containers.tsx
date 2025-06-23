@@ -2,6 +2,7 @@ import { InputSearch } from "@/components/input-search";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import MultipleSelector, { type Option } from "@/components/ui/multiselect";
 import {
 	Select,
 	SelectContent,
@@ -43,6 +44,9 @@ export function DockerContainers() {
 	const [error, setError] = useState<string | null>(null);
 	const [intervalInSeconds, setIntervalInSeconds] = useState<number>(5);
 	const [searchValue, setSearchValue] = useState<string>("");
+	const [status, setStatus] = useState<Option[]>([
+		{ value: "up", label: "UP" },
+	]);
 
 	function processPorts(ports: string): string {
 		return ports.split("->")[0].trim();
@@ -120,25 +124,51 @@ export function DockerContainers() {
 		}
 	}
 
-	const filteredContainers = containers.filter(
-		(container) =>
+	const filterBySearch = (container: DockerContainer) => {
+		return (
 			container.names.toLowerCase().includes(searchValue.toLowerCase()) ||
 			container.image.toLowerCase().includes(searchValue.toLowerCase()) ||
 			container.id.toLowerCase().includes(searchValue.toLowerCase()) ||
 			container.ports.toLowerCase().includes(searchValue.toLowerCase()) ||
-			container.status.toLowerCase().includes(searchValue.toLowerCase()),
+			container.status.toLowerCase().includes(searchValue.toLowerCase())
+		);
+	};
+
+	const filterByStatus = (container: DockerContainer) => {
+		if (status.length === 0) return true;
+		return status.some((s) =>
+			container.status.toLowerCase().includes(s.value.toLowerCase()),
+		);
+	};
+
+	const filteredContainers = containers.filter(
+		(container) => filterBySearch(container) && filterByStatus(container),
 	);
+
+	const statusOptions: Option[] = [
+		...status,
+		{
+			value: "down",
+			label: "DOWN",
+		},
+		{
+			value: "exited",
+			label: "EXITED",
+		},
+	];
 
 	return (
 		<div className="max-w-7xl mx-auto pt-8">
 			<Card className="rounded-lg shadow-lg">
 				<CardHeader>
-					<div className="flex items-center justify-between">
+					<div className="grid grid-cols-3 gap-2 items-center">
 						<CardTitle>Docker Containers</CardTitle>
-						<InputSearch
-							searchValue={searchValue}
-							onSearch={(value) => setSearchValue(value)}
-						/>
+						<div className="w-[220px]">
+							<InputSearch
+								searchValue={searchValue}
+								onSearch={(value) => setSearchValue(value)}
+							/>
+						</div>
 						<div className="flex items-center gap-2">
 							<Button onClick={fetchContainers} disabled={loading}>
 								{loading ? (
@@ -162,6 +192,22 @@ export function DockerContainers() {
 									<SelectItem value="60">60 sec</SelectItem>
 								</SelectContent>
 							</Select>
+							<div className="*:not-first:mt-2">
+								<MultipleSelector
+									commandProps={{
+										label: "Status",
+									}}
+									value={status}
+									defaultOptions={statusOptions}
+									onChange={(value) => setStatus(value)}
+									placeholder="Status"
+									hideClearAllButton
+									hidePlaceholderWhenSelected
+									emptyIndicator={
+										<p className="text-center text-sm">No results found</p>
+									}
+								/>
+							</div>
 						</div>
 					</div>
 				</CardHeader>
@@ -284,7 +330,7 @@ export function DockerContainers() {
 							</Table>
 							<div className="w-full">
 								<span className="block pt-2 text-sm">
-									{containers.length} containers found
+									{filteredContainers.length} containers found
 								</span>
 							</div>
 						</div>
