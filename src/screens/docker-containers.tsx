@@ -1,25 +1,16 @@
-import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 import {
 	AlertCircle,
 	ExternalLink,
-	Link,
 	Loader2,
 	Pause,
 	RefreshCcw,
 	Trash,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Select,
@@ -28,6 +19,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface DockerContainer {
 	id: string;
@@ -170,19 +170,7 @@ export function DockerContainers() {
 
 					{containers.length === 0 && !loading && !error ? (
 						<div className="text-center py-12">
-							<svg
-								className="mx-auto h-12 w-12"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-								/>
-							</svg>
+							<AlertCircle className="h-5 w-5" />
 							<h3 className="mt-2 text-sm font-medium">
 								No containers running
 							</h3>

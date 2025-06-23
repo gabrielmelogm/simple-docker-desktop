@@ -1,3 +1,5 @@
+import { MenuIcon } from "lucide-react";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
 	NavigationMenu,
@@ -13,13 +15,10 @@ import {
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
-	{ href: "#", label: "Home", active: window.location.pathname === "/" },
-	// { href: "#", label: "Features" },
-	// { href: "#", label: "Pricing" },
-	// { href: "#", label: "About" },
+	{ href: "/", label: "Home", active: window.location.pathname === "/" },
 ];
 
-export default function Navbar() {
+export function Navbar() {
 	return (
 		<header className="border-b px-4 md:px-6">
 			<div className="flex h-16 justify-between gap-4">
@@ -30,38 +29,14 @@ export default function Navbar() {
 						<Popover>
 							<PopoverTrigger asChild>
 								<Button className="group size-8" variant="ghost" size="icon">
-									<svg
-										className="pointer-events-none"
-										width={16}
-										height={16}
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										xmlns="http://www.w3.org/2000/svg"
-									>
-										<path
-											d="M4 12L20 12"
-											className="origin-center -translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[315deg]"
-										/>
-										<path
-											d="M4 12H20"
-											className="origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.8)] group-aria-expanded:rotate-45"
-										/>
-										<path
-											d="M4 12H20"
-											className="origin-center translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[135deg]"
-										/>
-									</svg>
+									<MenuIcon />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent align="start" className="w-36 p-1 md:hidden">
 								<NavigationMenu className="max-w-none *:w-full">
 									<NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
-										{navigationLinks.map((link, index) => (
-											<NavigationMenuItem key={index} className="w-full">
+										{navigationLinks.map((link) => (
+											<NavigationMenuItem key={link.href} className="w-full">
 												<NavigationMenuLink
 													href={link.href}
 													className="py-1.5"
@@ -78,14 +53,11 @@ export default function Navbar() {
 					</div>
 					{/* Main nav */}
 					<div className="flex items-center gap-6">
-						<a href="#" className="text-primary hover:text-primary/90">
-							{/* <Logo /> */}
-						</a>
 						{/* Navigation menu */}
 						<NavigationMenu className="h-full *:h-full max-md:hidden">
 							<NavigationMenuList className="h-full gap-2">
-								{navigationLinks.map((link, index) => (
-									<NavigationMenuItem key={index} className="h-full">
+								{navigationLinks.map((link) => (
+									<NavigationMenuItem key={link.href} className="h-full">
 										<NavigationMenuLink
 											active={link.active}
 											href={link.href}
@@ -102,10 +74,10 @@ export default function Navbar() {
 				{/* Right side */}
 				<div className="flex items-center gap-2">
 					<Button asChild variant="ghost" size="sm" className="text-sm">
-						<a href="#">Sign In</a>
+						<Link to="/hello">Sign In</Link>
 					</Button>
 					<Button asChild size="sm" className="text-sm">
-						<a href="#">Get Started</a>
+						<Link to="/hello">Get Started</Link>
 					</Button>
 				</div>
 			</div>
