@@ -106,15 +106,12 @@ export function DockerContainers() {
               <Button
                 onClick={fetchContainers}
                 disabled={loading}
-                asChild
               >
-                <div className="flex items-center cursor-pointer transition-all duration-300">
-                  {loading ? (
-                      <Loader2 className="size-4 animate-spin mr-2" />
-                    ) : (
-                      <RefreshCcw className="size-4" />
-                    )}
-                  </div>
+                {loading ? (
+                    <Loader2 className="size-4 animate-spin mr-2" />
+                  ) : (
+                    <RefreshCcw className="size-4" />
+                  )}
               </Button>
               <Select
                 onValueChange={(value) => setIntervalInSeconds(Number(value))}
@@ -139,7 +136,7 @@ export function DockerContainers() {
             <div className="mb-4 p-4 rounded-md">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <AlertCircle className="h-5 w-5" />
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium">
