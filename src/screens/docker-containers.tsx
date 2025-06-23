@@ -1,14 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
-import {
-	AlertCircle,
-	ExternalLink,
-	Loader2,
-	Pause,
-	RefreshCcw,
-	Trash,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { InputSearch } from "@/components/input-search";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +18,16 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { invoke } from "@tauri-apps/api/core";
+import {
+	AlertCircle,
+	ExternalLink,
+	Loader2,
+	Pause,
+	RefreshCcw,
+	Trash,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface DockerContainer {
 	id: string;
@@ -42,6 +42,7 @@ export function DockerContainers() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [intervalInSeconds, setIntervalInSeconds] = useState<number>(5);
+	const [searchValue, setSearchValue] = useState<string>("");
 
 	function processPorts(ports: string): string {
 		return ports.split("->")[0].trim();
@@ -119,12 +120,25 @@ export function DockerContainers() {
 		}
 	}
 
+	const filteredContainers = containers.filter(
+		(container) =>
+			container.names.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.image.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.id.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.ports.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.status.toLowerCase().includes(searchValue.toLowerCase()),
+	);
+
 	return (
 		<div className="max-w-7xl mx-auto pt-8">
 			<Card className="rounded-lg shadow-lg">
 				<CardHeader>
 					<div className="flex items-center justify-between">
 						<CardTitle>Docker Containers</CardTitle>
+						<InputSearch
+							searchValue={searchValue}
+							onSearch={(value) => setSearchValue(value)}
+						/>
 						<div className="flex items-center gap-2">
 							<Button onClick={fetchContainers} disabled={loading}>
 								{loading ? (
@@ -192,7 +206,7 @@ export function DockerContainers() {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{containers.map((container) => (
+									{filteredContainers.map((container) => (
 										<TableRow key={container.id}>
 											<TableCell>{container.id.substring(0, 12)}</TableCell>
 											<TableCell>{container.image}</TableCell>
