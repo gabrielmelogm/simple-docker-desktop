@@ -30,16 +30,18 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-interface DockerContainer {
+interface DockerComposeService {
 	id: string;
+	project: string;
+	service: string;
+	containerName: string;
 	image: string;
 	status: string;
 	ports: string;
-	names: string;
 }
 
 export function DockerContainers() {
-	const [containers, setContainers] = useState<DockerContainer[]>([]);
+	const [containers, setContainers] = useState<DockerComposeService[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [intervalInSeconds, setIntervalInSeconds] = useState<number>(5);
@@ -48,40 +50,36 @@ export function DockerContainers() {
 		{ value: "up", label: "UP" },
 	]);
 
-	function processPorts(ports: string): string {
-		return ports.split("->")[0].trim();
-	}
-
-	const parseDockerOutput = (output: string): DockerContainer[] => {
-		const lines = output.trim().split("\n");
-		if (lines.length === 0) return [];
-
-		// No header line to skip since we removed the table format
-		return lines
-			.map((line) => {
-				const parts = line.split("\t");
-				if (parts.length >= 5) {
-					return {
-						id: parts[0].trim(),
-						image: parts[1].trim(),
-						status: parts[2].trim(),
-						ports: processPorts(parts[3].trim()),
-						names: parts[4].trim(),
-					};
-				}
-				return null;
-			})
-			.filter((container): container is DockerContainer => container !== null);
-	};
-
-	const fetchContainers = async () => {
+	const fetchDockerComposeServices = async () => {
 		setLoading(true);
 		setError(null);
 
 		try {
-			const result = await invoke<string>("get_docker_containers");
-			const parsedContainers = parseDockerOutput(result);
-			setContainers(parsedContainers);
+			const result = await invoke<string>("get_docker_compose_services");
+			const data = result.split("\n").filter((line) => line.trim() !== "");
+			const parsedServices: DockerComposeService[] = data.map((line) => {
+				const [
+					project,
+					service,
+					image,
+					status,
+					ports,
+					portsLong,
+					portTcp,
+					id,
+					containerName,
+				] = line.split("->");
+				return {
+					id,
+					project,
+					service,
+					containerName,
+					image,
+					status,
+					ports,
+				};
+			});
+			setContainers(parsedServices);
 		} catch (err) {
 			setError(err as string);
 		} finally {
@@ -90,10 +88,10 @@ export function DockerContainers() {
 	};
 
 	useEffect(() => {
-		fetchContainers();
+		fetchDockerComposeServices();
 
 		const interval = setInterval(() => {
-			fetchContainers();
+			fetchDockerComposeServices();
 		}, intervalInSeconds * 1000);
 
 		return () => clearInterval(interval);
@@ -109,7 +107,7 @@ export function DockerContainers() {
 	async function stopContainer(id: string) {
 		try {
 			await invoke("stop_docker_container", { id });
-			await fetchContainers();
+			await fetchDockerComposeServices();
 		} catch (error) {
 			console.error("Error stopping container:", error);
 		}
@@ -118,23 +116,23 @@ export function DockerContainers() {
 	async function removeContainer(id: string) {
 		try {
 			await invoke("remove_docker_container", { id });
-			await fetchContainers();
+			await fetchDockerComposeServices();
 		} catch (error) {
 			console.error("Error removing container:", error);
 		}
 	}
 
-	const filterBySearch = (container: DockerContainer) => {
+	const filterBySearch = (container: DockerComposeService) => {
 		return (
-			container.names.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.service.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.project.toLowerCase().includes(searchValue.toLowerCase()) ||
 			container.image.toLowerCase().includes(searchValue.toLowerCase()) ||
-			container.id.toLowerCase().includes(searchValue.toLowerCase()) ||
-			container.ports.toLowerCase().includes(searchValue.toLowerCase()) ||
-			container.status.toLowerCase().includes(searchValue.toLowerCase())
+			container.status.toLowerCase().includes(searchValue.toLowerCase()) ||
+			container.ports.toLowerCase().includes(searchValue.toLowerCase())
 		);
 	};
 
-	const filterByStatus = (container: DockerContainer) => {
+	const filterByStatus = (container: DockerComposeService) => {
 		if (status.length === 0) return true;
 		return status.some((s) =>
 			container.status.toLowerCase().includes(s.value.toLowerCase()),
@@ -170,7 +168,7 @@ export function DockerContainers() {
 							/>
 						</div>
 						<div className="flex items-center gap-2">
-							<Button onClick={fetchContainers} disabled={loading}>
+							<Button onClick={fetchDockerComposeServices} disabled={loading}>
 								{loading ? (
 									<Loader2 className="size-4 animate-spin mr-2" />
 								) : (
@@ -245,9 +243,10 @@ export function DockerContainers() {
 									<TableRow>
 										<TableHead>Container ID</TableHead>
 										<TableHead>Image</TableHead>
+										<TableHead>Project</TableHead>
+										<TableHead>Container Name</TableHead>
 										<TableHead>Status</TableHead>
 										<TableHead>Ports</TableHead>
-										<TableHead>Names</TableHead>
 										<TableHead></TableHead>
 									</TableRow>
 								</TableHeader>
@@ -256,6 +255,8 @@ export function DockerContainers() {
 										<TableRow key={container.id}>
 											<TableCell>{container.id.substring(0, 12)}</TableCell>
 											<TableCell>{container.image}</TableCell>
+											<TableCell>{container.project}</TableCell>
+											<TableCell>{container.containerName}</TableCell>
 											<TableCell>
 												<span
 													className={
@@ -289,7 +290,6 @@ export function DockerContainers() {
 													"-"
 												)}
 											</TableCell>
-											<TableCell>{container.names}</TableCell>
 											<TableCell className="flex items-center gap-2">
 												<Button
 													onClick={() =>

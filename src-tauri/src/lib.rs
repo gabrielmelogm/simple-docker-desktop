@@ -1,5 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use std::process::Command;
+use std::process::{Command, Output};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -10,6 +10,24 @@ fn greet(name: &str) -> String {
 fn get_docker_containers() -> Result<String, String> {
     let output = Command::new("docker")
         .args(&["ps", "-a", "--format", "{{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"])
+        .output()
+        .map_err(|e| format!("Failed to execute docker ps: {}", e))?;
+
+    if output.status.success() {
+        let stdout = String::from_utf8(output.stdout)
+            .map_err(|e| format!("Failed to parse output: {}", e))?;
+        Ok(stdout)
+    } else {
+        let stderr = String::from_utf8(output.stderr)
+            .map_err(|e| format!("Failed to parse error: {}", e))?;
+        Err(format!("Docker command failed: {}", stderr))
+    }
+}
+
+#[tauri::command]
+fn get_docker_compose_services() -> Result<String, String> {
+    let output = Command::new("docker")
+        .args(&["ps", "-a", "--format", "{{.Label \"com.docker.compose.project\"}}->{{.Label \"com.docker.compose.service\"}}->{{.Image}}->{{.Status}}->{{.Ports}}->{{.ID}}->{{.Names}}"])
         .output()
         .map_err(|e| format!("Failed to execute docker ps: {}", e))?;
 
@@ -60,7 +78,7 @@ fn remove_docker_container(id: &str) -> Result<String, String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, get_docker_containers, stop_docker_container, remove_docker_container])
+        .invoke_handler(tauri::generate_handler![greet, get_docker_containers, get_docker_compose_services, stop_docker_container, remove_docker_container])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
