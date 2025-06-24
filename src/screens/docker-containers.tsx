@@ -1,5 +1,5 @@
 import { InputSearch } from "@/components/input-search";
-import { Badge } from "@/components/ui/badge";
+import { CollapsibleTable } from "@/components/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import MultipleSelector, { type Option } from "@/components/ui/multiselect";
@@ -10,27 +10,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
-import {
-	AlertCircle,
-	ExternalLink,
-	Loader2,
-	Pause,
-	RefreshCcw,
-	Trash,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { AlertCircle, Loader2, RefreshCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-interface DockerComposeService {
+export interface DockerComposeService {
 	id: string;
 	project: string;
 	service: string;
@@ -50,7 +34,7 @@ export function DockerContainers() {
 		{ value: "up", label: "UP" },
 	]);
 
-	const fetchDockerComposeServices = async () => {
+	const fetchDockerComposeServices = useCallback(async () => {
 		setLoading(true);
 		setError(null);
 
@@ -85,7 +69,7 @@ export function DockerContainers() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		fetchDockerComposeServices();
@@ -95,7 +79,7 @@ export function DockerContainers() {
 		}, intervalInSeconds * 1000);
 
 		return () => clearInterval(interval);
-	}, [intervalInSeconds]);
+	}, [intervalInSeconds, fetchDockerComposeServices]);
 
 	const getStatusColor = (status: string): "up" | "exited" => {
 		if (status.includes("Up")) return "up";
@@ -238,98 +222,13 @@ export function DockerContainers() {
 						</div>
 					) : (
 						<div className="overflow-x-auto">
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Container ID</TableHead>
-										<TableHead>Image</TableHead>
-										<TableHead>Project</TableHead>
-										<TableHead>Container Name</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Ports</TableHead>
-										<TableHead></TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{filteredContainers.map((container) => (
-										<TableRow key={container.id}>
-											<TableCell>{container.id.substring(0, 12)}</TableCell>
-											<TableCell>{container.image}</TableCell>
-											<TableCell>{container.project}</TableCell>
-											<TableCell>{container.containerName}</TableCell>
-											<TableCell>
-												<span
-													className={
-														"inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-													}
-												>
-													<Badge variant="secondary" className="gap-1.5">
-														<span
-															className={cn("size-1.5 rounded-full", {
-																"bg-emerald-500":
-																	getStatusColor(container.status) === "up",
-																"bg-red-500":
-																	getStatusColor(container.status) === "exited",
-															})}
-														></span>
-														{container.status}
-													</Badge>
-												</span>
-											</TableCell>
-											<TableCell>
-												{container.ports ? (
-													<a
-														href={`http://localhost:${container.ports.split(":")[1]}`}
-														target="_blank"
-														className="flex items-center justify-center gap-2 text-blue-500 cursor-pointer"
-													>
-														{container.ports}
-														<ExternalLink className="size-4 mb-2" />
-													</a>
-												) : (
-													"-"
-												)}
-											</TableCell>
-											<TableCell className="flex items-center gap-2">
-												<Button
-													onClick={() =>
-														getStatusColor(container.status) === "exited"
-															? null
-															: stopContainer(container.id)
-													}
-													asChild
-												>
-													<div
-														className={cn(
-															"flex items-center cursor-pointer transition-all duration-300 hover:bg-accent-foreground",
-															{
-																"opacity-40 cursor-not-allowed":
-																	getStatusColor(container.status) === "exited",
-															},
-														)}
-													>
-														<Pause className="size-4 text-yellow-600" />
-													</div>
-												</Button>
-												<Button
-													onClick={() => removeContainer(container.id)}
-													asChild
-												>
-													<div
-														className={cn(
-															"flex items-center cursor-pointer transition-all duration-300 hover:bg-accent-foreground",
-														)}
-													>
-														<Trash className="size-4 text-red-600" />
-													</div>
-												</Button>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+							<CollapsibleTable
+								data={filteredContainers}
+								onStopContainer={stopContainer}
+								onRemoveContainer={removeContainer}
+							/>
 							<div className="w-full">
-								<span className="block pt-2 text-sm">
+								<span className="block pt-4 text-xs text-muted-foreground">
 									{filteredContainers.length} containers found
 								</span>
 							</div>
